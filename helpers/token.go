@@ -107,7 +107,7 @@ func UpdateAllTokens(signedToken, refreshToken, userId string) {
 	opt := options.UpdateOptions{
 		Upsert: &upsert,
 	}
-	_, err := userCollection.UpdateOne(context, filter, opt)
+	_, err := userCollection.UpdateOne(context, filter, bson.D{{Key: "$set", Value: updatedObject}}, &opt)
 	if err != nil {
 		log.Panic(err)
 		return

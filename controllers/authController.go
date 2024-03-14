@@ -26,7 +26,7 @@ func hashPassword(password string) string {
 func verifyPassword(password string, foundPassword string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(foundPassword), []byte(password))
 	if err != nil {
-		log.Fatal("something went wrong when comparing hashed password")
+		println("something went wrong when comparing hashed password")
 		return false
 	}
 	return true
@@ -63,17 +63,14 @@ func HandleLogin() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"status": "400", "message": "email does not exist"})
 			return
 		}
-
-		helper.UpdateAllTokens(foundUser.Token, foundUser.RefreshToken, foundUser.UserId)
+		token, refreshToken, _ := helper.GenerateAllToken(foundUser.Email, foundUser.FirstName, foundUser.LastName, foundUser.UserType, foundUser.UserId)
+		helper.UpdateAllTokens(token, refreshToken, foundUser.UserId)
 		err = userCollection.FindOne(context, bson.M{"user_id": foundUser.UserId}).Decode(&foundUser)
-		c.JSON(http.StatusAccepted, gin.H{"status": "200", "message": "login success"})
-
 		if err != nil {
 			println("something went wrong in login")
 			c.JSON(http.StatusBadRequest, gin.H{"status": "400", "message": "something went wrong in login"})
 			return
 		}
-
 		c.JSON(http.StatusOK, gin.H{"message": "login success"})
 	}
 }
