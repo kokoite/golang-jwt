@@ -50,7 +50,7 @@ func FetchAllUsers() gin.HandlerFunc {
 
 		matching := bson.D{{Key: "$match", Value: bson.D{{}}}}
 		grouping := bson.D{{Key: "$group", Value: bson.D{
-			{Key: "_id", Value: bson.D{{Key: "_id", Value: "null"}}},
+			{Key: "_id", Value: "null"},
 			{Key: "total_count", Value: bson.D{{Key: "$sum", Value: 1}}},
 			{Key: "data", Value: bson.D{{Key: "$push", Value: "$$ROOT"}}},
 		}}}
@@ -82,7 +82,7 @@ func FetchAllUsers() gin.HandlerFunc {
 
 func FetchUserById() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userId := c.GetString("id")
+		userId := c.Param("id")
 		if userId == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"status": "400", "message": "user id (id) is empty"})
 			return
@@ -101,6 +101,6 @@ func FetchUserById() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"status": "400", "message": "something went wrong while decoding"})
 			return
 		}
-		c.JSON(http.StatusAccepted, gin.H{"status": "400", "message": user})
+		c.JSON(http.StatusAccepted, gin.H{"status": "200", "message": user})
 	}
 }

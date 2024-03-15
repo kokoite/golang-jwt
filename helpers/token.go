@@ -34,7 +34,7 @@ func init() {
 		println("error occured while loading .env files")
 	}
 	secretKey = os.Getenv("SECRET_KEY")
-	userCollection = database.OpenCollection(database.CreateMongoClient(), "users")
+	userCollection = database.OpenCollection(database.CreateMongoClient(), "user")
 }
 
 func GenerateAllToken(email, firstName, lastName, userType, uid string) (token, refreshToken string, err error) {
@@ -65,33 +65,33 @@ func GenerateAllToken(email, firstName, lastName, userType, uid string) (token, 
 		log.Fatal("something went wrong")
 		return "", "", err
 	}
-	return token, "refreshToken", nil
+	return token, refreshToken, nil
 }
 
 func ValidateToken(tokenString string) (*SignedDetails, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &SignedDetails{}, func(t *jwt.Token) (interface{}, error) {
+	var signedDetail SignedDetails
+	token, err := jwt.ParseWithClaims(tokenString, &signedDetail, func(t *jwt.Token) (interface{}, error) {
 		return []byte(secretKey), nil
 	},
 	)
 
 	if err != nil {
-		log.Fatal("something went wrong")
+		println("error is", err.Error())
+		return nil, err
 	}
 
 	if !token.Valid {
-		log.Fatal("token is invalid")
-		println("token is invalid")
+		return nil, errors.New("token is invalid")
 	}
-	claims, ok := token.Claims.(SignedDetails)
-
+	claims, ok := token.Claims.(*SignedDetails)
 	if !ok {
-		log.Fatal("unable to parse claims")
+		return nil, errors.New("unable to decode claims")
 	}
 
 	if claims.ExpiresAt < time.Now().Local().Unix() {
 		return nil, errors.New("token expired")
 	}
-	return &claims, nil
+	return claims, nil
 }
 
 func UpdateAllTokens(signedToken, refreshToken, userId string) {
